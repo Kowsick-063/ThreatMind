@@ -1,16 +1,13 @@
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-
-# Virtual environment
+# Environment
+.env
 .venv/
 venv/
 env/
 
-# Environment variables
-.env
-.env.*
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
 
 # IDE
 .vscode/
@@ -20,26 +17,30 @@ env/
 .DS_Store
 Thumbs.db
 
-# Node
-node_modules/
-dist/
+# Raw datasets / PCAPs
+data/raw/
+*.pcap
+*.pcapng
+*.cap
 
-# Data
-data/raw/*
-data/processed/*
-data/external/*
+# Generated / processed datasets
+data/processed/
 
-# Trained models
-models/trained/*
-models/checkpoints/*
-
-# Jupyter
-.ipynb_checkpoints/
+# ML artifacts
+*.pkl
+*.joblib
+*.pt
+*.pth
+*.onnx
 
 # Logs
 *.log
 
-# Test/cache
+# Test / coverage
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Temporary files
+*.tmp
+*.temp
