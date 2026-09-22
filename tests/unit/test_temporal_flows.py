@@ -32,10 +32,14 @@ def main():
             break
 
     print()
-    print(f"Windows processed: {total_windows}")
-    print(f"Flows processed: {total_flows}")
+    print(
+        f"Windows processed: {total_windows}"
+    )
+
+    print(
+        f"Flows processed: {total_flows}"
+    )
 
 
 if __name__ == "__main__":
     main()
-    

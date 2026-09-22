@@ -1,0 +1,54 @@
+# =========================
+# Web API
+# =========================
+fastapi
+uvicorn[standard]
+python-multipart
+
+# =========================
+# Database
+# =========================
+sqlalchemy
+psycopg[binary]
+alembic
+
+# =========================
+# Configuration
+# =========================
+python-dotenv
+
+# =========================
+# Network / PCAP Processing
+# =========================
+dpkt
+scapy
+
+# =========================
+# Data Processing
+# =========================
+numpy
+pandas
+scikit-learn
+scipy
+
+# =========================
+# Machine Learning
+# =========================
+torch
+
+# =========================
+# Explainability
+# =========================
+shap
+
+# =========================
+# Visualization / Dashboard
+# =========================
+streamlit
+plotly
+
+# =========================
+# Utilities / Testing
+# =========================
+joblib
+pytest

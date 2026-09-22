@@ -1,14 +1,14 @@
-from preprocessing.ingestion.pcap_stream import (
+from preprocessing.ingestion.dpkt_stream import (
     stream_pcap,
 )
 
 
-def create_flow_key(packet):
+def create_flow_key(packet: dict):
     """
     Create a bidirectional flow key.
 
-    A -> B and B -> A are treated as the
-    same network flow.
+    The two endpoints are sorted so that traffic in
+    either direction belongs to the same flow.
     """
 
     endpoint_a = (
@@ -38,14 +38,10 @@ def build_temporal_flows(
     max_packets: int | None = None,
 ):
     """
-    Stream a PCAP and generate flows for each
-    timestamp-based temporal window.
+    Build bidirectional flows inside temporal windows.
 
-    Only the current time window is kept in memory.
-
-    Yields:
-
-        window_start, flows
+    The PCAP is streamed and never loaded completely
+    into memory.
     """
 
     current_window = None
@@ -70,14 +66,11 @@ def build_temporal_flows(
             timestamp // window_seconds
         ) * window_seconds
 
-        # Initialize first window
         if current_window is None:
             current_window = window_start
 
-        # A new temporal window has started
         if window_start != current_window:
 
-            # Finalize and emit previous window
             finalized_flows = []
 
             for flow in flows.values():
@@ -94,7 +87,6 @@ def build_temporal_flows(
                 finalized_flows,
             )
 
-            # Reset memory
             flows = {}
 
             current_window = window_start
@@ -104,7 +96,9 @@ def build_temporal_flows(
         if key not in flows:
 
             flows[key] = {
-                "source_ip": packet["source_ip"],
+                "source_ip": packet[
+                    "source_ip"
+                ],
                 "destination_ip": packet[
                     "destination_ip"
                 ],
@@ -114,7 +108,9 @@ def build_temporal_flows(
                 "destination_port": packet[
                     "destination_port"
                 ],
-                "protocol": packet["protocol"],
+                "protocol": packet[
+                    "protocol"
+                ],
                 "start_time": timestamp,
                 "end_time": timestamp,
                 "packets": 0,
@@ -138,7 +134,7 @@ def build_temporal_flows(
                 packet["tcp_flags"]
             )
 
-    # Emit final window
+    # Final window
     if flows:
 
         finalized_flows = []
