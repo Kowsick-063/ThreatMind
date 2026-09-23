@@ -49,6 +49,16 @@ def main():
         "mean_bytes_per_flow",
         "packets_per_second",
         "bytes_per_second",
+        "mean_ttl",
+        "std_ttl",
+        "mean_tcp_window",
+        "std_tcp_window",
+        "mean_payload_size",
+        "std_payload_size",
+        "fragment_count",
+        "mean_iat",
+        "std_iat",
+        "max_iat",
     ]
 
     state_count = 0

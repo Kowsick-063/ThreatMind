@@ -20,6 +20,7 @@ def stream_pcap(file_path: str):
 
     with open(path, "rb") as file:
         reader = dpkt.pcapng.Reader(file)
+        previous_timestamp = None
 
         for timestamp, raw_packet in reader:
 
@@ -35,11 +36,30 @@ def stream_pcap(file_path: str):
 
                 ip = ethernet.data
 
+                timestamp = float(timestamp)
+
+                if previous_timestamp is None:
+                    iat = 0.0
+                else:
+                    iat = max(
+                        0.0,
+                        timestamp - previous_timestamp,
+                    )
+
+                previous_timestamp = timestamp
+
                 source_ip = socket_address(ip.src)
                 destination_ip = socket_address(ip.dst)
 
+                ip_fragmented = int(
+                    bool(
+                        ip.mf
+                        or ip.offset
+                    )
+                )
+
                 record = {
-                    "timestamp": float(timestamp),
+                    "timestamp": timestamp,
                     "source_ip": source_ip,
                     "destination_ip": destination_ip,
                     "protocol": int(ip.p),
@@ -47,6 +67,11 @@ def stream_pcap(file_path: str):
                     "destination_port": None,
                     "packet_length": len(raw_packet),
                     "tcp_flags": None,
+                    "ttl": int(ip.ttl),
+                    "tcp_window_size": 0,
+                    "payload_size": 0,
+                    "ip_fragmented": ip_fragmented,
+                    "iat": iat,
                 }
 
                 if isinstance(ip.data, dpkt.tcp.TCP):
@@ -64,6 +89,14 @@ def stream_pcap(file_path: str):
                         tcp.flags
                     )
 
+                    record["tcp_window_size"] = int(
+                        tcp.win
+                    )
+
+                    record["payload_size"] = len(
+                        tcp.data
+                    )
+
                 elif isinstance(ip.data, dpkt.udp.UDP):
                     udp = ip.data
 
@@ -73,6 +106,10 @@ def stream_pcap(file_path: str):
 
                     record["destination_port"] = int(
                         udp.dport
+                    )
+
+                    record["payload_size"] = len(
+                        udp.data
                     )
 
                 yield record

@@ -1,0 +1,9 @@
+{
+  "old_normalized_test_mse": 50.565277099609375,
+  "old_real_test_mse": 284777938944.0,
+  "old_real_test_mae": 83072.6875,
+  "new_normalized_test_mse": 51.14748764038086,
+  "new_normalized_test_mae": 1.9337358474731445,
+  "new_real_test_mse": 211644628992.0,
+  "new_real_test_mae": 72249.21875
+}

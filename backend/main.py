@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from backend.api.counterfactual import router as counterfactual_router
 from backend.api.network import router as network_router
 
 
@@ -18,6 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(network_router)
+app.include_router(counterfactual_router)
 
 
 @app.get("/")

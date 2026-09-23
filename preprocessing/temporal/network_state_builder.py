@@ -1,4 +1,4 @@
-from statistics import mean
+from statistics import mean, pstdev
 
 
 # TCP flag bit values
@@ -45,6 +45,17 @@ def calculate_network_state(
 
             "packets_per_second": 0.0,
             "bytes_per_second": 0.0,
+
+            "mean_ttl": 0.0,
+            "std_ttl": 0.0,
+            "mean_tcp_window": 0.0,
+            "std_tcp_window": 0.0,
+            "mean_payload_size": 0.0,
+            "std_payload_size": 0.0,
+            "fragment_count": 0,
+            "mean_iat": 0.0,
+            "std_iat": 0.0,
+            "max_iat": 0.0,
         }
 
     flow_count = len(flows)
@@ -125,6 +136,67 @@ def calculate_network_state(
         for flow in flows
     ]
 
+    packet_features = [
+        packet_feature
+        for flow in flows
+        for packet_feature in flow.get(
+            "packet_features",
+            [],
+        )
+    ]
+
+    ttl_values = [
+        feature["ttl"]
+        for feature in packet_features
+    ]
+
+    tcp_window_values = [
+        feature["tcp_window_size"]
+        for feature in packet_features
+    ]
+
+    payload_values = [
+        feature["payload_size"]
+        for feature in packet_features
+    ]
+
+    iat_values = [
+        feature["iat"]
+        for feature in packet_features
+    ]
+
+    if not packet_features:
+        return {
+            "timestamp": window_start,
+            "window_size_seconds": window_seconds,
+            "flow_count": flow_count,
+            "packet_count": packet_count,
+            "byte_count": byte_count,
+            "unique_sources": len(unique_sources),
+            "unique_destinations": len(unique_destinations),
+            "unique_ports": len(unique_ports),
+            "syn_count": syn_count,
+            "ack_count": ack_count,
+            "rst_count": rst_count,
+            "fin_count": fin_count,
+            "psh_count": psh_count,
+            "mean_flow_duration": mean(durations),
+            "mean_packets_per_flow": mean(packets_per_flow),
+            "mean_bytes_per_flow": mean(bytes_per_flow),
+            "packets_per_second": packet_count / window_seconds,
+            "bytes_per_second": byte_count / window_seconds,
+            "mean_ttl": 0.0,
+            "std_ttl": 0.0,
+            "mean_tcp_window": 0.0,
+            "std_tcp_window": 0.0,
+            "mean_payload_size": 0.0,
+            "std_payload_size": 0.0,
+            "fragment_count": 0,
+            "mean_iat": 0.0,
+            "std_iat": 0.0,
+            "max_iat": 0.0,
+        }
+
     return {
         "timestamp": window_start,
         "window_size_seconds": window_seconds,
@@ -172,4 +244,26 @@ def calculate_network_state(
             byte_count
             / window_seconds
         ),
+
+        "mean_ttl": mean(ttl_values),
+        "std_ttl": pstdev(ttl_values),
+        "mean_tcp_window": mean(
+            tcp_window_values
+        ),
+        "std_tcp_window": pstdev(
+            tcp_window_values
+        ),
+        "mean_payload_size": mean(
+            payload_values
+        ),
+        "std_payload_size": pstdev(
+            payload_values
+        ),
+        "fragment_count": sum(
+            feature["ip_fragmented"]
+            for feature in packet_features
+        ),
+        "mean_iat": mean(iat_values),
+        "std_iat": pstdev(iat_values),
+        "max_iat": max(iat_values),
     }

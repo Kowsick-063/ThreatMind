@@ -1,0 +1,30 @@
+ThreatMind Random Forest Forecasting Baseline
+==============================================
+
+Task: State(t) -> target_is_attack(t+1)
+Split: chronological 70% train / 15% validation / 15% test
+Model: RandomForestClassifier(n_estimators=200, class_weight=balanced, random_state=42, n_jobs=-1)
+Scaling: none
+
+Train rows: 4,011
+Validation rows: 859
+Test rows: 860
+Selected threshold: 0.20
+
+Accuracy: 0.476744
+Precision: 0.346549
+Recall: 0.979253
+F1: 0.511931
+False Positive Rate: 0.718901
+ROC-AUC: 0.738267
+PR-AUC: 0.400714
+
+Confusion Matrix:
+[[174, 445], [5, 236]]
+
+Same chronological split: PASS
+Same test set: PASS
+No future features: PASS
+No target leakage: PASS
+Threshold selected using validation only: PASS
+Test used only for final evaluation: PASS

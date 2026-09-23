@@ -1,0 +1,27 @@
+ThreatMind Logistic Regression Forecasting Baseline
+====================================================
+
+Task: State(t) -> target_is_attack(t+1)
+Split: chronological 70% train / 15% validation / 15% test
+
+Train rows: 4,011
+Validation rows: 859
+Test rows: 860
+Selected threshold: 0.40
+
+Accuracy: 0.570930
+Precision: 0.379699
+Recall: 0.838174
+F1: 0.522639
+False Positive Rate: 0.533118
+ROC-AUC: 0.861804
+PR-AUC: 0.858291
+
+Confusion Matrix:
+[[289, 330], [39, 202]]
+
+Chronological split: PASS
+Scaler fitted on training only: PASS
+Future features used: NO
+Target leakage: NO
+Test used for threshold selection: NO

@@ -116,6 +116,7 @@ def build_temporal_flows(
                 "packets": 0,
                 "bytes": 0,
                 "tcp_flags": set(),
+                "packet_features": [],
             }
 
         flow = flows[key]
@@ -127,6 +128,22 @@ def build_temporal_flows(
         ]
 
         flow["end_time"] = timestamp
+
+        flow["packet_features"].append(
+            {
+                "ttl": packet["ttl"],
+                "tcp_window_size": packet[
+                    "tcp_window_size"
+                ],
+                "payload_size": packet[
+                    "payload_size"
+                ],
+                "ip_fragmented": packet[
+                    "ip_fragmented"
+                ],
+                "iat": packet["iat"],
+            }
+        )
 
         if packet["tcp_flags"] is not None:
 
