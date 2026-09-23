@@ -4,6 +4,7 @@ from typing import Any
 
 from counterfactual.interventions import SUPPORTED_INTERVENTIONS, build_intervention
 from counterfactual.rollout import simulate_counterfactual
+from counterfactual.graph_simulator import simulate_graph_counterfactual
 
 
 def _safe_float(value: Any, default: float = 0.0) -> float:
@@ -107,6 +108,8 @@ def _compare_single_trajectory(
     baseline_trajectory: list[dict[str, Any]],
     counterfactual_trajectory: list[dict[str, Any]],
     intervention: Any,
+    *,
+    graph_impact: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     baseline = _as_trajectory(baseline_trajectory)
     counterfactual = _as_trajectory(counterfactual_trajectory)
@@ -130,7 +133,7 @@ def _compare_single_trajectory(
             **_compare_horizon_points(baseline_point, counterfactual_point),
         })
 
-    return {
+    result: dict[str, Any] = {
         "intervention": {
             "id": intervention_data["id"],
             "type": intervention_data["type"],
@@ -154,6 +157,11 @@ def _compare_single_trajectory(
         "trajectory": trajectory_rows,
     }
 
+    if graph_impact is not None:
+        result["graph_impact"] = graph_impact
+
+    return result
+
 
 def compare_interventions(
     baseline_trajectory: Any = None,
@@ -165,6 +173,7 @@ def compare_interventions(
     forecasting_model=None,
     scaler=None,
     horizon: int = 12,
+    current_timestamp: float | int | str | None = None,
 ) -> list[dict[str, Any]] | dict[str, Any]:
     """Direct trajectory comparison or legacy simulation-backed comparison."""
     if initial_state is not None and intervention_types is not None:
@@ -177,9 +186,21 @@ def compare_interventions(
                 forecasting_model=forecasting_model,
                 scaler=scaler,
                 horizon=horizon,
+                current_timestamp=current_timestamp,
             )
+            # Evaluate graph counterfactual impact if graph snapshot is available
+            graph_sim = simulate_graph_counterfactual(
+                intervention=intervention,
+                timestamp=current_timestamp,
+            )
+            graph_impact = graph_sim.get("graph_impact") if graph_sim.get("graph_available") else None
             results.append(
-                _compare_single_trajectory(simulation["baseline"], simulation["counterfactual"], intervention)
+                _compare_single_trajectory(
+                    simulation["baseline"],
+                    simulation["counterfactual"],
+                    intervention,
+                    graph_impact=graph_impact,
+                )
             )
         return results
 

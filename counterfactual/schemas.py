@@ -15,6 +15,10 @@ class CounterfactualRequest(BaseModel):
     intervention: InterventionInput
     horizon: int = Field(default=12, ge=1, le=12)
     state: dict[str, Any] | None = None
+    current_timestamp: float | None = Field(
+        default=None,
+        description="Unix timestamp identifying the newest historical state.",
+    )
 
 
 class TrajectoryPoint(BaseModel):

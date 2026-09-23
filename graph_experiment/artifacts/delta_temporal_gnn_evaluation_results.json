@@ -1,0 +1,226 @@
+{
+  "training": {
+    "train_sequences": 3378,
+    "validation_sequences": 804,
+    "test_sequences": 745,
+    "history": [
+      {
+        "epoch": 1,
+        "train_delta_loss": 0.8957335025760251,
+        "validation_delta_loss": 0.6529843727154518
+      },
+      {
+        "epoch": 2,
+        "train_delta_loss": 0.7633263395692274,
+        "validation_delta_loss": 0.6930910087936554
+      },
+      {
+        "epoch": 3,
+        "train_delta_loss": 0.7111745867911283,
+        "validation_delta_loss": 0.7058583343800028
+      },
+      {
+        "epoch": 4,
+        "train_delta_loss": 0.6776910574391016,
+        "validation_delta_loss": 0.7311295178992239
+      },
+      {
+        "epoch": 5,
+        "train_delta_loss": 0.6590506157238432,
+        "validation_delta_loss": 0.7862094341225885
+      },
+      {
+        "epoch": 6,
+        "train_delta_loss": 0.6441895921619211,
+        "validation_delta_loss": 0.7491267118880998
+      },
+      {
+        "epoch": 7,
+        "train_delta_loss": 0.6342231643542233,
+        "validation_delta_loss": 0.7020526789314118
+      },
+      {
+        "epoch": 8,
+        "train_delta_loss": 0.6203127306830325,
+        "validation_delta_loss": 0.6584694578279904
+      }
+    ]
+  },
+  "delta_prediction": [
+    {
+      "feature": "node_count",
+      "delta_mae": 12.034900665283203,
+      "delta_rmse": 15.776958465576172,
+      "delta_correlation": 0.4853220344670055
+    },
+    {
+      "feature": "edge_count",
+      "delta_mae": 13.80872631072998,
+      "delta_rmse": 17.84600830078125,
+      "delta_correlation": 0.4730381291763157
+    },
+    {
+      "feature": "unique_sources",
+      "delta_mae": 2.435224771499634,
+      "delta_rmse": 3.191530466079712,
+      "delta_correlation": 0.4893046865023559
+    },
+    {
+      "feature": "unique_destinations",
+      "delta_mae": 11.515026092529297,
+      "delta_rmse": 15.235845565795898,
+      "delta_correlation": 0.5135553041587015
+    },
+    {
+      "feature": "total_packets",
+      "delta_mae": 1279.3148193359375,
+      "delta_rmse": 1983.487548828125,
+      "delta_correlation": 0.1798735788685435
+    },
+    {
+      "feature": "total_bytes",
+      "delta_mae": 1244322.625,
+      "delta_rmse": 1978731.75,
+      "delta_correlation": 0.10882438203388571
+    },
+    {
+      "feature": "average_degree",
+      "delta_mae": 0.1596524864435196,
+      "delta_rmse": 0.212044358253479,
+      "delta_correlation": 0.4257565573871885
+    },
+    {
+      "feature": "max_degree",
+      "delta_mae": 10.833843231201172,
+      "delta_rmse": 14.345210075378418,
+      "delta_correlation": 0.4522012491357532
+    },
+    {
+      "feature": "average_in_degree",
+      "delta_mae": 0.08060207217931747,
+      "delta_rmse": 0.10570783168077469,
+      "delta_correlation": 0.43454474985658514
+    },
+    {
+      "feature": "average_out_degree",
+      "delta_mae": 0.08270707726478577,
+      "delta_rmse": 0.10951004177331924,
+      "delta_correlation": 0.3900477275291686
+    }
+  ],
+  "absolute_reconstructed_prediction": [
+    {
+      "feature": "node_count",
+      "persistence_mae": 12.822818756103516,
+      "absolute_gnn_mae": 27.08025360107422,
+      "delta_gnn_mae": 12.034900665283203,
+      "persistence_rmse": 17.147563934326172,
+      "absolute_gnn_rmse": 31.840742111206055,
+      "delta_gnn_rmse": 15.776958465576172
+    },
+    {
+      "feature": "edge_count",
+      "persistence_mae": 13.818792343139648,
+      "absolute_gnn_mae": 25.996980667114258,
+      "delta_gnn_mae": 13.80872631072998,
+      "persistence_rmse": 18.501985549926758,
+      "absolute_gnn_rmse": 31.22613525390625,
+      "delta_gnn_rmse": 17.84600830078125
+    },
+    {
+      "feature": "unique_sources",
+      "persistence_mae": 2.697986602783203,
+      "absolute_gnn_mae": 3.9757301807403564,
+      "delta_gnn_mae": 2.435224771499634,
+      "persistence_rmse": 3.532780170440674,
+      "absolute_gnn_rmse": 4.73000431060791,
+      "delta_gnn_rmse": 3.191530466079712
+    },
+    {
+      "feature": "unique_destinations",
+      "persistence_mae": 12.37047004699707,
+      "absolute_gnn_mae": 25.571517944335938,
+      "delta_gnn_mae": 11.515026092529297,
+      "persistence_rmse": 16.64698600769043,
+      "absolute_gnn_rmse": 29.50727653503418,
+      "delta_gnn_rmse": 15.235845565795898
+    },
+    {
+      "feature": "total_packets",
+      "persistence_mae": 983.369140625,
+      "absolute_gnn_mae": 2577.121826171875,
+      "delta_gnn_mae": 1279.3148193359375,
+      "persistence_rmse": 1634.574951171875,
+      "absolute_gnn_rmse": 3400.03857421875,
+      "delta_gnn_rmse": 1983.487548828125
+    },
+    {
+      "feature": "total_bytes",
+      "persistence_mae": 771208.5625,
+      "absolute_gnn_mae": 1922771.375,
+      "delta_gnn_mae": 1244322.625,
+      "persistence_rmse": 1368829.875,
+      "absolute_gnn_rmse": 2456487.75,
+      "delta_gnn_rmse": 1978731.75
+    },
+    {
+      "feature": "average_degree",
+      "persistence_mae": 0.17599321901798248,
+      "absolute_gnn_mae": 0.17595602571964264,
+      "delta_gnn_mae": 0.1596524864435196,
+      "persistence_rmse": 0.2335716038942337,
+      "absolute_gnn_rmse": 0.2385564148426056,
+      "delta_gnn_rmse": 0.2120443731546402
+    },
+    {
+      "feature": "max_degree",
+      "persistence_mae": 9.628188133239746,
+      "absolute_gnn_mae": 18.73629379272461,
+      "delta_gnn_mae": 10.833843231201172,
+      "persistence_rmse": 13.969429969787598,
+      "absolute_gnn_rmse": 21.766267776489258,
+      "delta_gnn_rmse": 14.345210075378418
+    },
+    {
+      "feature": "average_in_degree",
+      "persistence_mae": 0.08799660950899124,
+      "absolute_gnn_mae": 0.08159905672073364,
+      "delta_gnn_mae": 0.08060207217931747,
+      "persistence_rmse": 0.11678580194711685,
+      "absolute_gnn_rmse": 0.11103594303131104,
+      "delta_gnn_rmse": 0.10570783168077469
+    },
+    {
+      "feature": "average_out_degree",
+      "persistence_mae": 0.08799660950899124,
+      "absolute_gnn_mae": 0.08940324932336807,
+      "delta_gnn_mae": 0.08270707726478577,
+      "persistence_rmse": 0.11678580194711685,
+      "absolute_gnn_rmse": 0.12079273164272308,
+      "delta_gnn_rmse": 0.10951004922389984
+    }
+  ],
+  "aggregate_metrics": {
+    "persistence": {
+      "aggregate_mae": 77224.359375,
+      "macro_mae": 77224.390625,
+      "aggregate_rmse": 432862.34375,
+      "macro_rmse": 137053.390625
+    },
+    "absolute_gnn": {
+      "aggregate_mae": 192545.015625,
+      "macro_mae": 192545.03125,
+      "aggregate_rmse": 776810.375,
+      "macro_rmse": 246000.71875
+    },
+    "delta_gnn": {
+      "aggregate_mae": 124565.2890625,
+      "macro_mae": 124565.453125,
+      "aggregate_rmse": 625730.25,
+      "macro_rmse": 198078.15625
+    }
+  },
+  "delta_scaler": "data\\processed\\graphs\\delta_temporal_gnn_scaler.joblib",
+  "horizon": 1,
+  "limitation": "H1 only; future graph topology cannot be reconstructed for recursive H2-H12 graph inputs."
+}

@@ -1,0 +1,372 @@
+{
+  "training_configuration": {
+    "sequence_length": 60,
+    "hidden_dim": 64,
+    "graph_embedding_dim": 64,
+    "temporal_hidden_dim": 64,
+    "learning_rate": 0.001,
+    "batch_size": 1,
+    "max_epochs": 30,
+    "graph_loss_weight": 1.0,
+    "attack_loss_weight": 1.0,
+    "category_loss_weight": 1.0
+  },
+  "split_sizes": {
+    "train": 3378,
+    "validation": 804,
+    "test": 745
+  },
+  "feature_names": {
+    "node": [
+      "packets_sent",
+      "packets_received",
+      "bytes_sent",
+      "bytes_received",
+      "flows_in",
+      "flows_out",
+      "degree",
+      "in_degree",
+      "out_degree",
+      "syn_count",
+      "ack_count",
+      "rst_count",
+      "fin_count",
+      "psh_count",
+      "unique_destinations",
+      "unique_sources",
+      "unique_ports"
+    ],
+    "edge": [
+      "protocol",
+      "source_port",
+      "destination_port",
+      "packets",
+      "bytes",
+      "flow_count",
+      "syn_count",
+      "ack_count",
+      "rst_count",
+      "fin_count",
+      "psh_count"
+    ],
+    "graph": [
+      "node_count",
+      "edge_count",
+      "unique_sources",
+      "unique_destinations",
+      "total_packets",
+      "total_bytes",
+      "average_degree",
+      "max_degree",
+      "average_in_degree",
+      "average_out_degree"
+    ]
+  },
+  "training_history": [
+    {
+      "epoch": 1,
+      "train_total_loss": 2.5380768203537727,
+      "train_graph_loss": 0.9294768502156081,
+      "train_attack_loss": 0.717770860666633,
+      "train_category_loss": 0.8908290999167907,
+      "validation_total_loss": 1.930821976851468,
+      "validation_graph_loss": 0.4720165788830809,
+      "validation_attack_loss": 0.6736446189050057,
+      "validation_category_loss": 0.7851607722429493
+    },
+    {
+      "epoch": 2,
+      "train_total_loss": 2.1240029223505883,
+      "train_graph_loss": 0.7680047633839896,
+      "train_attack_loss": 0.6043470397794508,
+      "train_category_loss": 0.7516511164521804,
+      "validation_total_loss": 1.97078287067698,
+      "validation_graph_loss": 0.5023430197393123,
+      "validation_attack_loss": 0.7081277742611235,
+      "validation_category_loss": 0.7603120723767067
+    },
+    {
+      "epoch": 3,
+      "train_total_loss": 2.0356667062952507,
+      "train_graph_loss": 0.6905924684730347,
+      "train_attack_loss": 0.5837635685347325,
+      "train_category_loss": 0.7613106714931023,
+      "validation_total_loss": 2.035763718002471,
+      "validation_graph_loss": 0.5103781795620326,
+      "validation_attack_loss": 0.7420111498725948,
+      "validation_category_loss": 0.7833743759648717
+    },
+    {
+      "epoch": 4,
+      "train_total_loss": 1.9637179353520884,
+      "train_graph_loss": 0.6453493549369933,
+      "train_attack_loss": 0.5557348969209963,
+      "train_category_loss": 0.7626336773095433,
+      "validation_total_loss": 2.1091074136952264,
+      "validation_graph_loss": 0.5619567644536791,
+      "validation_attack_loss": 0.7561714991704741,
+      "validation_category_loss": 0.7909791608948019
+    },
+    {
+      "epoch": 5,
+      "train_total_loss": 1.8908049029807072,
+      "train_graph_loss": 0.660946179964332,
+      "train_attack_loss": 0.5234257350524125,
+      "train_category_loss": 0.7064329868346858,
+      "validation_total_loss": 1.9322494072700613,
+      "validation_graph_loss": 0.4098221751587901,
+      "validation_attack_loss": 0.6788983297585255,
+      "validation_category_loss": 0.8435288976080975
+    },
+    {
+      "epoch": 6,
+      "train_total_loss": 1.8305447076184287,
+      "train_graph_loss": 0.6099913234609059,
+      "train_attack_loss": 0.530807798716216,
+      "train_category_loss": 0.6897455814006133,
+      "validation_total_loss": 1.9864807093321388,
+      "validation_graph_loss": 0.484424634211099,
+      "validation_attack_loss": 0.7689372621365448,
+      "validation_category_loss": 0.7331188270701697
+    },
+    {
+      "epoch": 7,
+      "train_total_loss": 1.8409703623408604,
+      "train_graph_loss": 0.5873256357835551,
+      "train_attack_loss": 0.5524856680910428,
+      "train_category_loss": 0.701159069847256,
+      "validation_total_loss": 2.2571597360259856,
+      "validation_graph_loss": 0.6387043816236714,
+      "validation_attack_loss": 0.8261403646042098,
+      "validation_category_loss": 0.7923149819397808
+    },
+    {
+      "epoch": 8,
+      "train_total_loss": 1.7696452112576184,
+      "train_graph_loss": 0.5957109868402944,
+      "train_attack_loss": 0.5237126770352668,
+      "train_category_loss": 0.6502215427855474,
+      "validation_total_loss": 1.9412290741555134,
+      "validation_graph_loss": 0.4229114485617301,
+      "validation_attack_loss": 0.730667375065201,
+      "validation_category_loss": 0.7876502343671239
+    }
+  ],
+  "best_epoch": 1,
+  "forecast_metrics": {
+    "horizon": 1,
+    "seconds_ahead": 5,
+    "feature_metrics": [
+      {
+        "feature": "node_count",
+        "gnn_mae": 27.08025360107422,
+        "persistence_mae": 12.822818756103516,
+        "gnn_rmse": 31.840742111206055,
+        "persistence_rmse": 17.147563934326172
+      },
+      {
+        "feature": "edge_count",
+        "gnn_mae": 25.996980667114258,
+        "persistence_mae": 13.818792343139648,
+        "gnn_rmse": 31.22613525390625,
+        "persistence_rmse": 18.501985549926758
+      },
+      {
+        "feature": "unique_sources",
+        "gnn_mae": 3.9757301807403564,
+        "persistence_mae": 2.697986602783203,
+        "gnn_rmse": 4.73000431060791,
+        "persistence_rmse": 3.532780170440674
+      },
+      {
+        "feature": "unique_destinations",
+        "gnn_mae": 25.571517944335938,
+        "persistence_mae": 12.37047004699707,
+        "gnn_rmse": 29.50727653503418,
+        "persistence_rmse": 16.64698600769043
+      },
+      {
+        "feature": "total_packets",
+        "gnn_mae": 2577.121826171875,
+        "persistence_mae": 983.369140625,
+        "gnn_rmse": 3400.03857421875,
+        "persistence_rmse": 1634.574951171875
+      },
+      {
+        "feature": "total_bytes",
+        "gnn_mae": 1922771.375,
+        "persistence_mae": 771208.5625,
+        "gnn_rmse": 2456487.75,
+        "persistence_rmse": 1368829.875
+      },
+      {
+        "feature": "average_degree",
+        "gnn_mae": 0.17595602571964264,
+        "persistence_mae": 0.17599321901798248,
+        "gnn_rmse": 0.2385564148426056,
+        "persistence_rmse": 0.2335716038942337
+      },
+      {
+        "feature": "max_degree",
+        "gnn_mae": 18.73629379272461,
+        "persistence_mae": 9.628188133239746,
+        "gnn_rmse": 21.766267776489258,
+        "persistence_rmse": 13.969429969787598
+      },
+      {
+        "feature": "average_in_degree",
+        "gnn_mae": 0.08159905672073364,
+        "persistence_mae": 0.08799660950899124,
+        "gnn_rmse": 0.11103594303131104,
+        "persistence_rmse": 0.11678580194711685
+      },
+      {
+        "feature": "average_out_degree",
+        "gnn_mae": 0.08940324932336807,
+        "persistence_mae": 0.08799660950899124,
+        "gnn_rmse": 0.12079273164272308,
+        "persistence_rmse": 0.11678580194711685
+      }
+    ],
+    "aggregate_metrics": {
+      "gnn_aggregate_mae": 192545.015625,
+      "persistence_aggregate_mae": 77224.359375,
+      "gnn_macro_mae": 192545.03125,
+      "persistence_macro_mae": 77224.390625,
+      "gnn_aggregate_rmse": 776810.375,
+      "persistence_aggregate_rmse": 432862.34375,
+      "gnn_macro_rmse": 246000.71875,
+      "persistence_macro_rmse": 137053.390625,
+      "features_gnn_better_mae": 2,
+      "features_gnn_better_rmse": 1
+    },
+    "attack_metrics": {
+      "population": {
+        "BENIGN": 504,
+        "DDoS_or_attack": 241
+      },
+      "gnn_roc_auc": 0.06542679312388855,
+      "gnn_pr_auc": 0.18944724585338013,
+      "gnn_brier": 0.23188145458698273,
+      "gnn_mean_probability": 0.3328821063041687,
+      "persistence_roc_auc": 0.996933247711256,
+      "persistence_pr_auc": 0.9930607440268849,
+      "persistence_brier": 0.0026845638640224934,
+      "persistence_mean_probability": 0.3234899342060089,
+      "attack_rate": 0.32348993288590605
+    },
+    "category_metrics": {
+      "training_classes": [
+        "BENIGN",
+        "Bot",
+        "PortScan"
+      ],
+      "classes_absent_from_training": [
+        "DDoS"
+      ],
+      "test_support": {
+        "BENIGN": 504,
+        "Bot": 0,
+        "PortScan": 0,
+        "DDoS": 241
+      },
+      "confusion_matrix": [
+        [
+          504,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          241,
+          0,
+          0,
+          0
+        ]
+      ],
+      "classification_report": {
+        "BENIGN": {
+          "precision": 0.676510067114094,
+          "recall": 1.0,
+          "f1-score": 0.8070456365092074,
+          "support": 504.0
+        },
+        "Bot": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 0.0
+        },
+        "PortScan": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 0.0
+        },
+        "DDoS": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 241.0
+        },
+        "accuracy": 0.676510067114094,
+        "macro avg": {
+          "precision": 0.1691275167785235,
+          "recall": 0.25,
+          "f1-score": 0.20176140912730184,
+          "support": 745.0
+        },
+        "weighted avg": {
+          "precision": 0.45766587090671595,
+          "recall": 0.676510067114094,
+          "f1-score": 0.5459744977189805,
+          "support": 745.0
+        }
+      },
+      "classification_claim": "Temporal generalization limitation; unseen test classes are not evidence of learned classification."
+    }
+  },
+  "horizon_metrics": {
+    "supported_horizons": [
+      1
+    ],
+    "unsupported_horizons": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "limitation": "Recursive H2-H12 graph forecasts are not evaluated because future node/edge topology cannot be reconstructed from graph-level predictions."
+  },
+  "persistence_metrics": {
+    "gnn_aggregate_mae": 192545.015625,
+    "persistence_aggregate_mae": 77224.359375,
+    "gnn_macro_mae": 192545.03125,
+    "persistence_macro_mae": 77224.390625,
+    "gnn_aggregate_rmse": 776810.375,
+    "persistence_aggregate_rmse": 432862.34375,
+    "gnn_macro_rmse": 246000.71875,
+    "persistence_macro_rmse": 137053.390625,
+    "features_gnn_better_mae": 2,
+    "features_gnn_better_rmse": 1
+  }
+}

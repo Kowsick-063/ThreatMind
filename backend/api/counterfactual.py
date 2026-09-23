@@ -6,6 +6,7 @@ from fastapi import APIRouter
 
 from counterfactual.comparator import compare_interventions
 from counterfactual.defense_planner import rank_interventions
+from counterfactual.graph_simulator import simulate_graph_counterfactual
 from counterfactual.interventions import SUPPORTED_INTERVENTIONS, build_intervention
 from counterfactual.rollout import simulate_counterfactual
 from counterfactual.schemas import CounterfactualRequest
@@ -54,6 +55,7 @@ def simulate(request: CounterfactualRequest):
         initial_state=state,
         intervention=intervention,
         horizon=request.horizon,
+        current_timestamp=request.current_timestamp,
     )
     baseline_summary = compute_trajectory_risk(simulation["baseline"])
     counterfactual_summary = compute_trajectory_risk(simulation["counterfactual"])
@@ -76,12 +78,35 @@ def simulate(request: CounterfactualRequest):
         simulation["intervention"],
     )
 
-    return {
+    graph_simulation = simulate_graph_counterfactual(
+        intervention=intervention,
+        timestamp=request.current_timestamp,
+    )
+
+    response_payload = {
         "baseline": baseline_summary,
         "counterfactual": counterfactual_summary,
         "comparison": comparison,
         "explanation": explanation,
     }
+    if graph_simulation.get("graph_available"):
+        response_payload["baseline_graph"] = graph_simulation.get("baseline_graph_summary")
+        response_payload["counterfactual_graph"] = graph_simulation.get("counterfactual_graph_summary")
+        response_payload["graph_impact"] = graph_simulation.get("graph_impact")
+
+    return response_payload
+
+
+@router.post("/graph-simulate")
+def graph_simulate(request: CounterfactualRequest):
+    intervention = build_intervention(
+        request.intervention.type,
+        request.intervention.target,
+    )
+    return simulate_graph_counterfactual(
+        intervention=intervention,
+        timestamp=request.current_timestamp,
+    )
 
 
 @router.post("/compare")
@@ -101,6 +126,7 @@ def compare_all(request: CounterfactualRequest):
         initial_state=state,
         intervention_types=list(SUPPORTED_INTERVENTIONS),
         horizon=request.horizon,
+        current_timestamp=request.current_timestamp,
     )
     ranked = rank_interventions(results)
     return {
