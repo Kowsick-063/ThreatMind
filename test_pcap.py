@@ -1,8 +1,19 @@
+from pathlib import Path
+
+import pytest
+
 from preprocessing.ingestion.pcap_parser import parse_pcap
 
-records = parse_pcap("data/raw/sample.pcap")
 
-print(f"Packets extracted: {len(records)}")
+PCAP_PATH = Path("data/raw/sample.pcap")
 
-for record in records[:5]:
-    print(record)
+
+@pytest.mark.skipif(
+    not PCAP_PATH.exists(),
+    reason="Sample PCAP not available",
+)
+def test_parse_sample_pcap():
+    records = parse_pcap(str(PCAP_PATH))
+
+    assert records is not None
+    assert len(records) > 0

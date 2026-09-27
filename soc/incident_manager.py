@@ -1,195 +1,474 @@
-"""In-memory incident manager for ThreatMind SOC workflows.
-
-Handles incident creation, retrieval, newest-first listing, and strictly
-forward lifecycle transitions.
-"""
-
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Dict, List, Optional
+
+from backend.database import SessionLocal
+from backend.models.incident import (
+    IncidentLifecycleModel,
+    IncidentModel,
+)
 
 from soc.incident import (
-    LIFECYCLE_STAGES,
     Incident,
     InvalidLifecycleTransitionError,
-    generate_incident_id,
+    LIFECYCLE_STAGES,
+    STATUS_ORDER,
 )
 
 
 class DuplicateIncidentError(ValueError):
-    """Raised when an incident for a given timestamp already exists."""
-    pass
+    """Raised when an incident with the same ID already exists."""
 
 
 class IncidentNotFoundError(KeyError):
-    """Raised when the requested incident ID does not exist."""
-    pass
+    """Raised when an incident cannot be found."""
 
 
-# Thread-safe in-memory stores
-_incidents_by_id: dict[str, Incident] = {}
-_incidents_by_timestamp: dict[float, str] = {}
+def _utc_now() -> datetime:
+    """Return the current timezone-aware UTC timestamp."""
+    return datetime.now(timezone.utc)
 
 
-def create_incident(
-    soc_analysis: dict[str, Any],
-    initial_status: str = "RECOMMENDED",
-) -> dict[str, Any]:
-    """Create a structured incident object from a completed SOC analysis.
-
-    Parameters
-    ----------
-    soc_analysis:
-        Output dict from run_soc_analysis or build_soc_response.
-    initial_status:
-        Starting status in the lifecycle (defaults to RECOMMENDED for completed analyses).
-
-    Returns
-    -------
-    dict representing the stored incident.
+def _normalize_json_value(value: Any) -> Any:
     """
-    timestamp = float(soc_analysis["timestamp"])
+    Convert JSON-serialized strings back into Python JSON-compatible
+    objects before storing them in PostgreSQL JSONB columns.
 
-    # Duplicate check
-    if timestamp in _incidents_by_timestamp:
-        existing_id = _incidents_by_timestamp[timestamp]
-        raise DuplicateIncidentError(
-            f"An incident already exists for timestamp {timestamp}: '{existing_id}'."
+    Some existing ThreatMind SOC objects return JSON fields as strings,
+    while PostgreSQL JSONB expects Python dictionaries/lists.
+    """
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError:
+            return value
+
+    return value
+
+
+def _model_to_dict(
+    incident: IncidentModel,
+    lifecycle: Optional[List[IncidentLifecycleModel]] = None,
+) -> Dict[str, Any]:
+    """
+    Convert a PostgreSQL IncidentModel into the dictionary shape
+    expected by the existing API and tests.
+    """
+
+    if lifecycle is None:
+        lifecycle = []
+
+    lifecycle_history = [
+        {
+            "status": item.status,
+            "timestamp": item.timestamp.isoformat(),
+        }
+        for item in sorted(
+            lifecycle,
+            key=lambda item: item.timestamp,
         )
+    ]
 
-    incident_id = generate_incident_id(timestamp)
-    now = datetime.now(timezone.utc).isoformat()
-
-    current_state = soc_analysis.get("current_state", {})
-    risk = soc_analysis.get("risk", {})
-    forecast = soc_analysis.get("forecast", {})
-    horizons = forecast.get("horizons", [])
-    graph = soc_analysis.get("graph", {})
-    mitre = soc_analysis.get("mitre", [])
-    counterfactuals = soc_analysis.get("counterfactuals", [])
-    decision = soc_analysis.get("decision", {})
-    uncertainties = soc_analysis.get("uncertainties", [])
-
-    # Extract primary attack category from forecast
-    attack_category = "UNKNOWN"
-    if horizons:
-        attack_category = str(horizons[0].get("attack_category", "UNKNOWN"))
-
-    recommended_intervention = decision.get("recommended_intervention", {})
-    decision_basis = decision.get("decision_basis", {})
-
-    # Tiered evidence preservation
-    evidence = {
-        "observed": {
-            "timestamp": timestamp,
-            "current_state": current_state,
-            "graph_available": bool(graph.get("available", False)),
-            "graph_summary": graph if graph.get("available") else None,
-        },
-        "predicted": {
-            "forecast_horizons": horizons,
-            "peak_horizon": forecast.get("peak_horizon", 1),
-            "peak_probability": forecast.get("peak_probability", 0.0),
-            "probability_trend": forecast.get("probability_trend", "stable"),
-            "attack_category": attack_category,
-            "mitre_evidence": mitre,
-        },
-        "simulated": {
-            "counterfactuals": counterfactuals,
-        },
-        "recommended": {
-            "selected_intervention": recommended_intervention,
-            "decision_basis": decision_basis,
-            "alternatives": decision.get("alternatives", []),
-            "near_ties": decision.get("near_ties", []),
-            "reasons": decision.get("reasons", []),
-        },
+    return {
+        "incident_id": incident.incident_id,
+        "timestamp": incident.timestamp,
+        "status": incident.status,
+        "created_at": incident.created_at.isoformat(),
+        "updated_at": incident.updated_at.isoformat(),
+        "risk_level": incident.risk_level,
+        "peak_attack_probability": incident.peak_attack_probability,
+        "peak_horizon": incident.peak_horizon,
+        "attack_category": incident.attack_category,
+        "recommended_intervention": incident.recommended_intervention,
+        "decision_basis": incident.decision_basis,
+        "mitre_techniques": incident.mitre_techniques,
+        "uncertainties": incident.uncertainties,
+        "evidence": incident.evidence,
+        "lifecycle_history": lifecycle_history,
     }
-
-    # Record lifecycle history
-    status_clean = initial_status.upper().strip()
-    if status_clean not in LIFECYCLE_STAGES:
-        raise ValueError(
-            f"Invalid initial status: '{initial_status}'. Must be one of {LIFECYCLE_STAGES}."
-        )
-
-    if status_clean == "RECOMMENDED":
-        # Full analysis completed all stages
-        lifecycle_history = [
-            {"status": stage, "transitioned_at": now}
-            for stage in LIFECYCLE_STAGES
-        ]
-    else:
-        stage_idx = LIFECYCLE_STAGES.index(status_clean)
-        lifecycle_history = [
-            {"status": stage, "transitioned_at": now}
-            for stage in LIFECYCLE_STAGES[: stage_idx + 1]
-        ]
-
-    incident = Incident(
-        incident_id=incident_id,
-        timestamp=timestamp,
-        status=status_clean,
-        created_at=now,
-        risk_level=risk.get("risk_level", "LOW"),
-        peak_attack_probability=float(forecast.get("peak_probability", risk.get("peak_probability", 0.0))),
-        peak_horizon=int(forecast.get("peak_horizon", risk.get("peak_horizon", 1))),
-        attack_category=attack_category,
-        mitre_techniques=mitre,
-        recommended_intervention=recommended_intervention,
-        decision_basis=decision_basis,
-        uncertainties=uncertainties,
-        evidence=evidence,
-        lifecycle_history=lifecycle_history,
-    )
-
-    _incidents_by_id[incident_id] = incident
-    _incidents_by_timestamp[timestamp] = incident_id
-
-    return incident.to_dict()
-
-
-def get_incident(incident_id: str) -> dict[str, Any] | None:
-    """Retrieve an incident by its incident_id."""
-    incident = _incidents_by_id.get(incident_id)
-    return incident.to_dict() if incident is not None else None
-
-
-def list_incidents() -> list[dict[str, Any]]:
-    """Return all stored incidents ordered newest first by timestamp."""
-    sorted_incidents = sorted(
-        _incidents_by_id.values(),
-        key=lambda inc: inc.timestamp,
-        reverse=True,
-    )
-    return [inc.to_dict() for inc in sorted_incidents]
-
-
-def update_incident_status(incident_id: str, status: str) -> dict[str, Any]:
-    """Transition an incident to a new lifecycle status.
-
-    Raises
-    ------
-    IncidentNotFoundError
-        If incident_id is not found.
-    InvalidLifecycleTransitionError
-        If the status transition violates forward-only rules.
-    ValueError
-        If status is unrecognized.
-    """
-    incident = _incidents_by_id.get(incident_id)
-    if incident is None:
-        raise IncidentNotFoundError(f"Incident '{incident_id}' not found.")
-
-    incident.transition_to(status)
-    return incident.to_dict()
 
 
 def clear_incidents() -> None:
-    """Reset the in-memory incident store. Used for test isolation."""
-    _incidents_by_id.clear()
-    _incidents_by_timestamp.clear()
+    """
+    Delete all incidents and their lifecycle records.
+
+    Primarily used by tests.
+    """
+
+    db = SessionLocal()
+
+    try:
+        db.query(IncidentLifecycleModel).delete(
+            synchronize_session=False
+        )
+
+        db.query(IncidentModel).delete(
+            synchronize_session=False
+        )
+
+        db.commit()
+
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
+        db.close()
+
+
+def create_incident(
+    soc_analysis: Dict[str, Any],
+    initial_status: str = "RECOMMENDED",
+) -> Dict[str, Any]:
+    """
+    Create and persist a new incident from SOC analysis.
+
+    The default remains RECOMMENDED for backward compatibility.
+
+    The API explicitly passes DETECTED when it wants the incident
+    lifecycle to begin at the detection stage.
+    """
+
+    incident = Incident.from_soc_analysis(
+        soc_analysis,
+        initial_status=initial_status,
+    )
+
+    data = incident.to_dict()
+
+    incident_id = data["incident_id"]
+
+    db = SessionLocal()
+
+    try:
+        existing = (
+            db.query(IncidentModel)
+            .filter(
+                IncidentModel.incident_id == incident_id
+            )
+            .first()
+        )
+
+        if existing is not None:
+            raise DuplicateIncidentError(
+                f"Incident '{incident_id}' already exists."
+            )
+
+        created_at = _utc_now()
+
+        db_incident = IncidentModel(
+            incident_id=data["incident_id"],
+            timestamp=data["timestamp"],
+            status=data["status"],
+            created_at=created_at,
+            updated_at=created_at,
+            risk_level=data["risk_level"],
+            peak_attack_probability=data[
+                "peak_attack_probability"
+            ],
+            peak_horizon=data["peak_horizon"],
+            attack_category=data["attack_category"],
+
+            # JSONB fields
+            recommended_intervention=_normalize_json_value(
+                data["recommended_intervention"]
+            ),
+
+            decision_basis=_normalize_json_value(
+                data["decision_basis"]
+            ),
+
+            mitre_techniques=_normalize_json_value(
+                data["mitre_techniques"]
+            ),
+
+            uncertainties=_normalize_json_value(
+                data["uncertainties"]
+            ),
+
+            evidence=_normalize_json_value(
+                data["evidence"]
+            ),
+        )
+
+        db.add(db_incident)
+
+        lifecycle_timestamp = created_at
+
+        db_lifecycle = IncidentLifecycleModel(
+            incident_id=incident_id,
+            status=data["status"],
+            timestamp=lifecycle_timestamp,
+        )
+
+        db.add(db_lifecycle)
+
+        db.commit()
+
+        db.refresh(db_incident)
+
+        lifecycle = (
+            db.query(IncidentLifecycleModel)
+            .filter(
+                IncidentLifecycleModel.incident_id
+                == incident_id
+            )
+            .order_by(
+                IncidentLifecycleModel.timestamp.asc(),
+                IncidentLifecycleModel.id.asc(),
+            )
+            .all()
+        )
+
+        return _model_to_dict(
+            db_incident,
+            lifecycle,
+        )
+
+    except DuplicateIncidentError:
+        db.rollback()
+        raise
+
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
+        db.close()
+
+
+def get_incident(
+    incident_id: str,
+) -> Optional[Dict[str, Any]]:
+    """
+    Retrieve one incident by its public incident ID.
+    """
+
+    db = SessionLocal()
+
+    try:
+        incident = (
+            db.query(IncidentModel)
+            .filter(
+                IncidentModel.incident_id == incident_id
+            )
+            .first()
+        )
+
+        if incident is None:
+            return None
+
+        lifecycle = (
+            db.query(IncidentLifecycleModel)
+            .filter(
+                IncidentLifecycleModel.incident_id
+                == incident_id
+            )
+            .order_by(
+                IncidentLifecycleModel.timestamp.asc(),
+                IncidentLifecycleModel.id.asc(),
+            )
+            .all()
+        )
+
+        return _model_to_dict(
+            incident,
+            lifecycle,
+        )
+
+    finally:
+        db.close()
+
+
+def list_incidents() -> List[Dict[str, Any]]:
+    """
+    Return all incidents ordered newest first.
+    """
+
+    db = SessionLocal()
+
+    try:
+        incidents = (
+            db.query(IncidentModel)
+            .order_by(
+                IncidentModel.created_at.desc(),
+                IncidentModel.id.desc(),
+            )
+            .all()
+        )
+
+        if not incidents:
+            return []
+
+        incident_ids = [
+            incident.incident_id
+            for incident in incidents
+        ]
+
+        lifecycle_rows = (
+            db.query(IncidentLifecycleModel)
+            .filter(
+                IncidentLifecycleModel.incident_id.in_(
+                    incident_ids
+                )
+            )
+            .order_by(
+                IncidentLifecycleModel.timestamp.asc(),
+                IncidentLifecycleModel.id.asc(),
+            )
+            .all()
+        )
+
+        lifecycle_by_incident: Dict[
+            str,
+            List[IncidentLifecycleModel],
+        ] = {}
+
+        for row in lifecycle_rows:
+            lifecycle_by_incident.setdefault(
+                row.incident_id,
+                [],
+            ).append(row)
+
+        return [
+            _model_to_dict(
+                incident,
+                lifecycle_by_incident.get(
+                    incident.incident_id,
+                    [],
+                ),
+            )
+            for incident in incidents
+        ]
+
+    finally:
+        db.close()
+
+
+def update_incident_status(
+    incident_id: str,
+    target_status: str,
+) -> Dict[str, Any]:
+    """
+    Advance an incident exactly one lifecycle stage.
+
+    Valid lifecycle:
+
+        DETECTED
+            ↓
+        ASSESSED
+            ↓
+        FORECASTED
+            ↓
+        SIMULATED
+            ↓
+        RECOMMENDED
+
+    Backward transitions and skipped stages are rejected.
+    RECOMMENDED is terminal.
+    """
+
+    target_status = target_status.upper().strip()
+
+    if target_status not in LIFECYCLE_STAGES:
+        raise InvalidLifecycleTransitionError(
+            f"Unknown lifecycle status: '{target_status}'."
+        )
+
+    db = SessionLocal()
+
+    try:
+        incident = (
+            db.query(IncidentModel)
+            .filter(
+                IncidentModel.incident_id == incident_id
+            )
+            .first()
+        )
+
+        if incident is None:
+            raise IncidentNotFoundError(
+                f"Incident '{incident_id}' not found."
+            )
+
+        current_status = incident.status
+
+        if current_status == "RECOMMENDED":
+            raise InvalidLifecycleTransitionError(
+                "RECOMMENDED is a terminal incident state."
+            )
+
+        current_index = STATUS_ORDER[current_status]
+        target_index = STATUS_ORDER[target_status]
+
+        expected_index = current_index + 1
+
+        if target_index != expected_index:
+            if target_index <= current_index:
+                raise InvalidLifecycleTransitionError(
+                    f"Cannot move incident from "
+                    f"{current_status} back to "
+                    f"{target_status}."
+                )
+
+            raise InvalidLifecycleTransitionError(
+                f"Cannot skip lifecycle stage: "
+                f"{current_status} -> "
+                f"{target_status}. "
+                f"Expected "
+                f"{LIFECYCLE_STAGES[expected_index]}."
+            )
+
+        now = _utc_now()
+
+        incident.status = target_status
+        incident.updated_at = now
+
+        lifecycle = IncidentLifecycleModel(
+            incident_id=incident_id,
+            status=target_status,
+            timestamp=now,
+        )
+
+        db.add(lifecycle)
+
+        db.commit()
+
+        db.refresh(incident)
+
+        lifecycle_rows = (
+            db.query(IncidentLifecycleModel)
+            .filter(
+                IncidentLifecycleModel.incident_id
+                == incident_id
+            )
+            .order_by(
+                IncidentLifecycleModel.timestamp.asc(),
+                IncidentLifecycleModel.id.asc(),
+            )
+            .all()
+        )
+
+        return _model_to_dict(
+            incident,
+            lifecycle_rows,
+        )
+
+    except (
+        IncidentNotFoundError,
+        InvalidLifecycleTransitionError,
+    ):
+        db.rollback()
+        raise
+
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
+        db.close()
 
 
 __all__ = [

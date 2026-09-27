@@ -17,3 +17,6 @@ __all__ = [
     "Intervention",
     "SimulationResult",
 ]
+
+from backend.models.network import *
+from backend.models.incident import IncidentModel, IncidentLifecycleModel

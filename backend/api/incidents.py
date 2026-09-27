@@ -40,7 +40,10 @@ def create(request: CreateIncidentRequest) -> dict[str, Any]:
         raise HTTPException(status_code=503, detail={"error": str(exc), "available": False}) from exc
 
     try:
-        incident = create_incident(soc_analysis)
+        incident = create_incident(
+    soc_analysis,
+    initial_status="DETECTED",
+)
     except DuplicateIncidentError as exc:
         raise HTTPException(status_code=409, detail={"error": str(exc)}) from exc
 
